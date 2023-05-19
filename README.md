@@ -21,7 +21,6 @@ Utiliser node pour installer les dépendances du projet :
 npm install
 ```
 - **Bulma** (*0.9.4*)
-- **Axios** (*1.4.0*)
 ___
 ### *Contributeur.ices*
 - ***Sarah Katz***
