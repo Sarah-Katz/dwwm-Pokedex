@@ -10,8 +10,25 @@
 </head>
 
 <body>
-
-  <script defer src="/node_modules/axios/dist/axios.min.js"></script>
+  <main>
+    <div class="column is-10 is-offset-1 has-background-primary">
+      <table class="table is-bordered is-striped is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody id="table-content">
+        </tbody>
+      </table>
+      <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
+        <a id="btn-previous" class="pagination-previous has-text-weight-bold">Précedent</a>
+        <a id="btn-next" class="pagination-next has-text-weight-bold">Suivant</a>
+      </nav>
+    </div>
+  </main>
   <script defer src="/js/pokedex.js"></script>
 </body>
 
