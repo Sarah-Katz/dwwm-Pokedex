@@ -179,7 +179,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Créer un bouton reset en bas de page
   function createResetButton() {
+    if (document.getElementById("reset-button")) {
+      return;
+    }
     const resetButton = document.createElement("button");
+    resetButton.id = "reset-button";
     resetButton.innerText = "Reset";
     resetButton.classList.add("button", "is-danger", "is-small");
     resetButton.addEventListener("click", resetPage);
