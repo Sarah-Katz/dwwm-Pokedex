@@ -16,6 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Bouton de la barre de recherche
   const searchButton = document.getElementById("search-button");
   searchButton.addEventListener("click", handleSearch);
+  // Filtre par type
+  const typeFilter = document.getElementById("type-filter");
+  typeFilter.addEventListener("change", handleTypeFilter);
 
   // Initialise le numéro de page à 1
   let page = 1;
@@ -181,6 +184,43 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetPage() {
     loadPage();
     this.remove();
+  }
+
+  // Gère le bouton de filtrage
+  function handleTypeFilter() {
+    const selectedType = typeFilter.value;
+    if (selectedType === "") {
+      // If "All" is selected, load all Pokémon
+      loadPage();
+    } else {
+      // Fetch Pokémon of the selected type
+      searchByType(selectedType);
+    }
+  }
+
+  // Affiche les pokemons par type
+  async function searchByType(type) {
+    try {
+      const response = await fetch(`${url}type/${type}`);
+      const data = await response.json();
+      const pokemonUrls = data.pokemon.map((entry) => entry.pokemon.url);
+      const fetchPromises = pokemonUrls.map((url) => fetch(url).then((response) => response.json()));
+      const pokemonData = await Promise.all(fetchPromises);
+      const filteredResults = pokemonData.map((data) => ({
+        name: data.name,
+        id: data.id,
+        types: data.types,
+      }));
+      table.innerHTML = "";
+      populateList(filteredResults);
+      createResetButton();
+    } catch (error) {
+      console.error("Error searching Pokémon by type:", error);
+      table.innerHTML = "";
+      const errorRow = document.createElement("tr");
+      errorRow.innerHTML = `<td colspan="3" class="has-text-centered">Something went wrong while filtering by type : ${type}.</td>`;
+      table.appendChild(errorRow);
+    }
   }
 
   // Initialise l'affichage de la liste au chargement de la page
