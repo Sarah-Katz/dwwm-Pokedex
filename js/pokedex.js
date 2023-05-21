@@ -146,8 +146,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(`${url}pokemon/?limit=1008`);
       const data = await response.json();
       const pokemons = data.results;
-      // Filtre si la recherche est un nom partiel
-      const filteredPokemons = pokemons.filter((pokemon) => pokemon.name.startsWith(searchTerm));
+      let filteredPokemons;
+      if (isNaN(searchTerm)) {
+        // Filtre par nom
+        filteredPokemons = pokemons.filter((pokemon) => pokemon.name.toLowerCase().startsWith(searchTerm.toLowerCase()));
+      } else {
+        // Filtre par id
+        filteredPokemons = pokemons.filter((pokemon) => pokemon.url.endsWith(`/${searchTerm}/`));
+      }
       if (filteredPokemons.length === 0) {
         throw new Error("No Pokémon found.");
       }
