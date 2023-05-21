@@ -10,10 +10,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const table = document.getElementById("table-content");
   // Liste des stats dans la modal de détail
   const ul = document.getElementById("modal-stats");
+  // Barre de recherche
+  const searchInput = document.getElementById("search-input");
+  searchInput.addEventListener("keypress", handleKeyPress);
+  // Bouton de la barre de recherche
+  const searchButton = document.getElementById("search-button");
+  searchButton.addEventListener("click", handleSearch);
 
+  // Initialise le numéro de page à 1
   let page = 1;
 
+  // Recharge la page
   function loadPage() {
+    searchInput.value = "";
     previous.style.display = page === 1 ? "none" : "block";
     next.style.display = page === 53 ? "none" : "block";
     table.innerHTML = "";
@@ -30,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadPage();
   }
 
+  // Fetech les 20 pokemons à afficher selon la page
   async function getPokemon() {
     let offset;
     if (page == 1) {
@@ -52,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateList(pokemons);
   }
 
+  // Remplis le tableau avec les pokemon récupérés par le fetch
   function populateList(pokemons) {
     pokemons.forEach((pokemon) => {
       const tr = document.createElement("tr");
@@ -69,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Fonction d'écriture des double types
   function getTypesString(pokemon) {
     if (pokemon.types.length > 1) {
       return `${pokemon.types[0].type.name} / ${pokemon.types[1].type.name}`;
@@ -76,36 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return pokemon.types[0].type.name;
   }
 
-  // function populateList(pokemons) {
-  //   pokemons.forEach((pokemon) => {
-  //     let tr = document.createElement("tr");
-  //     tr.className = "row";
-  //     tr.addEventListener("click", getDetail);
-  //     table.append(tr);
-
-  //     let numberCell = document.createElement("td");
-  //     numberCell.className = "pokemonId";
-  //     numberCell.innerText = "#" + pokemon.id;
-  //     tr.append(numberCell);
-
-  //     let nameCell = document.createElement("td");
-  //     nameCell.className = "pokemonName";
-  //     nameCell.innerText = pokemon.name;
-  //     tr.append(nameCell);
-
-  //     let typesCell = document.createElement("td");
-  //     typesCell.className = "pokemonTypes";
-  //     let typesString;
-  //     if (pokemon.types.length > 1) {
-  //       typesString = pokemon.types[0].type.name + " / " + pokemon.types[1].type.name;
-  //     } else {
-  //       typesString = pokemon.types[0].type.name;
-  //     }
-  //     typesCell.innerText = typesString;
-  //     tr.append(typesCell);
-  //   });
-  // }
-
+  // Fetch du détail d'un pokemon
   async function getDetail(id) {
     const response = await fetch(url + `pokemon/${id}`, { method: "GET" });
     const json = await response.json();
@@ -119,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showModal(pokemonData);
   }
 
+  // Remplis les infos de la modal de détail avant de l'afficher
   function showModal(pokemonData) {
     const modal = document.getElementById("modal-js-example");
     modal.classList.add("is-active");
@@ -136,5 +120,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Normalise la recherche de l'utilisateur (reset si vide)
+  function handleSearch() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    if (searchTerm === "") {
+      loadPage();
+    } else {
+      searchPokemon(searchTerm);
+    }
+  }
+
+  // Gère la touche entrée pour la recherche
+  function handleKeyPress(event) {
+    if (event.key === "Enter") {
+      handleSearch();
+    }
+  }
+
+  // Fonction de recherche des pokemon
+  async function searchPokemon(searchTerm) {
+    try {
+      const response = await fetch(`${url}pokemon/?limit=1008`);
+      const data = await response.json();
+      const pokemons = data.results;
+      // Filtre si la recherche est un nom partiel
+      const filteredPokemons = pokemons.filter((pokemon) => pokemon.name.startsWith(searchTerm));
+      if (filteredPokemons.length === 0) {
+        throw new Error("No Pokémon found.");
+      }
+      // Créer un objet de données pour chaque pokemons filtré
+      const fetchPromises = filteredPokemons.map((result) => fetch(result.url).then((response) => response.json()));
+      const pokemonData = await Promise.all(fetchPromises);
+      const filteredResults = pokemonData.map((data, i) => ({
+        name: filteredPokemons[i].name,
+        id: data.id,
+        types: data.types,
+      }));
+      table.innerHTML = "";
+      populateList(filteredResults);
+      createResetButton();
+    } catch (error) {
+      console.error("Error searching for Pokémon:", error);
+      table.innerHTML = "";
+      const errorRow = document.createElement("tr");
+      errorRow.innerHTML = `<td colspan="3" class="has-text-centered">No Pokémon found.</td>`;
+      table.appendChild(errorRow);
+    }
+  }
+
+  // Créer un bouton reset en bas de page
+  function createResetButton() {
+    const resetButton = document.createElement("button");
+    resetButton.innerText = "Reset";
+    resetButton.classList.add("button", "is-danger", "is-small");
+    resetButton.addEventListener("click", resetPage);
+    table.insertAdjacentElement("afterend", resetButton);
+  }
+
+  // Reset de la page
+  function resetPage() {
+    loadPage();
+    this.remove();
+  }
+
+  // Initialise l'affichage de la liste au chargement de la page
   loadPage();
 });
